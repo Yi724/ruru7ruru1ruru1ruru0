@@ -4,36 +4,36 @@ function size(){W=innerWidth;H=innerHeight;sky.width=W*dpr;sky.height=H*dpr;sc.s
 const rand=(a,b)=>a+Math.random()*(b-a);
 const colors=['#ffd5f4','#d6b8ff','#a6caff','#ffe6b6','#ffffff','#ff7ea8','#9be7ff'];
 let stars=Array.from({length:220},()=>({x:Math.random(),y:Math.random()*.87,r:rand(.3,1.7),p:rand(0,7)}));
-let rockets=[],sparks=[],flashes=[];let launchClock=0,launchTarget=.07;
+let rockets=[],sparks=[],flashes=[];let launchClock=0,launchTarget=.24;
 // Seconds-based fireworks: fast ascending rockets, staggered bursts, fading luminous trails and gravity.
 function firework(x=rand(.13,.88)*W,y=rand(.07,.48)*H,big=false){
  const color=colors[Math.floor(rand(0,colors.length))],n=big?145:95;
  flashes.push({x,y,life:.18,max:.18,color});
  for(let i=0;i<n;i++){
-  let a=i/n*Math.PI*2+rand(-.065,.065),v=rand(big?310:240,big?720:540),life=rand(.325,.66);
+  let a=i/n*Math.PI*2+rand(-.065,.065),v=rand(big?155:120,big?360:270),life=rand(.65,1.32);
   sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life,max:life,color,r:rand(.75,1.85),trail:[],glitter:Math.random()<1});
  }
 }
 function launchFirework(big=false){
  const tx=rand(.13,.87)*W,ty=rand(.07,.48)*H;
  const x=tx+rand(-75,75),y=H*.82;
- const duration=rand(.08,.13);
+ const duration=rand(.34,.58);
  rockets.push({x,y,sx:x,sy:y,tx,ty,age:0,duration,color:colors[Math.floor(rand(0,colors.length))],big,trail:[]});
 }
 for(let i=0;i<11;i++)setTimeout(()=>launchFirework(true),i*155);
-function drawSky(dt){
+function drawSky(dt){dt*=10;
  sc.clearRect(0,0,W,H);
  for(const s of stars){let a=.25+.5*(1+Math.sin(time*1.08+s.p))/2;sc.globalAlpha=a;sc.fillStyle='#fce4ff';sc.beginPath();sc.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);sc.fill()}
  sc.globalAlpha=1;
  launchClock+=dt;
- if(launchClock>=launchTarget){launchClock=0;launchTarget=rand(.045,.10);launchFirework(Math.random()<1)}
+ if(launchClock>=launchTarget){launchClock=0;launchTarget=rand(.16,.39);launchFirework(Math.random()<1)}
  for(let i=rockets.length-1;i>=0;i--){
   const p=rockets[i];p.age+=dt;let t=Math.min(1,p.age/p.duration);p.x=p.sx+(p.tx-p.sx)*t;p.y=p.sy+(p.ty-p.sy)*(1-(1-t)*(1-t));
-  p.trail.push([p.x,p.y]);if(p.trail.length>3)p.trail.shift();sc.globalAlpha=.95;sc.strokeStyle=p.color;sc.lineWidth=2;sc.shadowBlur=12;sc.shadowColor=p.color;sc.beginPath();for(let j=0;j<p.trail.length;j++){const q=p.trail[j];if(j===0)sc.moveTo(...q);else sc.lineTo(...q)}sc.stroke();sc.shadowBlur=0;
+  p.trail.push([p.x,p.y]);if(p.trail.length>8)p.trail.shift();sc.globalAlpha=.95;sc.strokeStyle=p.color;sc.lineWidth=2;sc.shadowBlur=12;sc.shadowColor=p.color;sc.beginPath();for(let j=0;j<p.trail.length;j++){const q=p.trail[j];if(j===0)sc.moveTo(...q);else sc.lineTo(...q)}sc.stroke();sc.shadowBlur=0;
   if(t>=1){firework(p.x,p.y,p.big);rockets.splice(i,1)}
  }
  for(let i=sparks.length-1;i>=0;i--){
-  let p=sparks[i];p.trail.push([p.x,p.y]);if(p.trail.length>3)p.trail.shift();
+  let p=sparks[i];p.trail.push([p.x,p.y]);if(p.trail.length>4)p.trail.shift();
   p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=115*dt;p.vx*=Math.exp(-.65*dt);p.vy*=Math.exp(-.22*dt);p.life-=dt;
   let alpha=Math.max(0,p.life/p.max);sc.globalAlpha=alpha;sc.strokeStyle=p.color;sc.lineWidth=p.r*alpha;sc.beginPath();for(let j=0;j<p.trail.length;j++){let q=p.trail[j];if(!j)sc.moveTo(q[0],q[1]);else sc.lineTo(q[0],q[1])}sc.lineTo(p.x,p.y);sc.stroke();
   if(p.glitter&&Math.random()<1){sc.fillStyle='#fff';sc.fillRect(p.x+rand(-3,3),p.y+rand(-3,3),1.4,1.4)}
